@@ -15,6 +15,9 @@ temperature_collection = database.get_collection("temperatures")
 class TemperatureData(BaseModel):
     temperature: float
     device_id: str
+@app.get("/")
+def read_root():
+    return {"message": "Smart Cold Chain API is live and running!"}
 
 @app.post("/api/temperature")
 async def receive_temperature(data: TemperatureData):
@@ -59,3 +62,15 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
+
+    @app.get("/api/temperatures", response_description="Lister toutes les températures")
+async def get_temperatures():
+    # Récupère tous les documents de ta collection (adapte le nom de ta collection si besoin)
+    temperatures = []
+    async for temp in db["temperatures"].find():
+        # Convertit l'ID MongoDB en string pour éviter les erreurs de sérialisation JSON
+        temp["id"] = str(temp["_id"])
+        del temp["_id"]
+        temperatures.append(temp)
+    
+    return {"status": "success", "data": temperatures}
