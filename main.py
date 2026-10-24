@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field
  
+from firebase_client import push_live
 from risk import TEMP_MAX, WINDOW, compute_risk
  
 app = FastAPI(title="Smart Cold Chain API")
@@ -82,16 +83,20 @@ async def receive_temperature(data: TemperatureData):
         "lat": data.lat,
         "lon": data.lon,
         "status": status,
-        "timestamp": _naive_utc(data.timestamp) if data.timestamp else datetime.utcnow(),
+        "timestamp": _naive_utc(data.timestamp) if data.timestamp else datetime.now(timezone.utc).replace(tzinfo=None),
     }
  
     result = await temperature_collection.insert_one(record)
+ 
+    # Temps réel : Firebase (sans effet si Firebase n'est pas configuré)
+    firebase_ok = await push_live(record)
  
     return {
         "status": "success",
         "temperature_status": status,
         "received_value": data.temperature,
         "db_id": str(result.inserted_id),
+        "firebase": firebase_ok,
     }
  
  

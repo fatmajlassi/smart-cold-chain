@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+ 
+  api:
+    build: .
+    environment:
+      MONGO_DETAILS: mongodb://mongo:27017
+      # Firebase (optionnel) : décommentez et renseignez
+      # FIREBASE_DB_URL: https://VOTRE-PROJET-default-rtdb.firebaseio.com
+      # FIREBASE_CREDENTIALS_FILE: /run/secrets/firebase.json
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+ 
+  web:
+    image: nginx:alpine
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    ports:
+      - "8080:80"
+ 
+  # Capteur simulé : docker compose --profile sim up
+  simulator:
+    build: .
+    command: python simulate_sensor.py
+    environment:
+      API_URL: http://api:8000/api/temperature
+      INTERVAL: "2"
+    depends_on:
+      - api
+    profiles: ["sim"]
+ 
+volumes:
+  mongo_data:
+ 
