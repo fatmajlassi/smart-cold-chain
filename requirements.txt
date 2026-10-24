@@ -4,3 +4,4 @@ motor
 pymongo
 dnspython
 requests
+numpy
