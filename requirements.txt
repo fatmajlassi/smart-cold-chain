@@ -5,3 +5,4 @@ pymongo
 dnspython
 requests
 numpy
+firebase-admin
